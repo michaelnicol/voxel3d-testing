@@ -19,14 +19,34 @@ scene.add(new three.AxesHelper(100, 100, 100))
 
 console.log(voxel3d)
 
-function addItem(coords, size) {
+let controller = new voxel3d.UUIDController()
+
+let layer1 = new voxel3d.Layer({
+  "controller": controller,
+  "origin": [0,0,0],
+  "verticesArray": [[0,0,0],[10,0,0],[5,10,0]]
+})
+let layer2 = new voxel3d.Layer({
+  "controller": controller,
+  "origin": [0,0,0],
+  "verticesArray": [[0,0,10],[10,0,10],[5,10,10]]
+})
+let convexExtrude = new voxel3d.LayerConvexExtrude({
+  "controller": controller,
+  "origin": [0,0,0],
+  "extrudeObjects": [layer1, layer2]
+})
+convexExtrude.generateEdges()
+console.log(convexExtrude)
+addItem(convexExtrude.getEdgeDirectory(voxel3d.LayerConvexExtrudeEdgeDirectoryOptions.RETURN_MODE_VOXELS), 1, "RED")
+function addItem(coords, size, color='RED') {
   if (coords.length === 0) {
     return;
   }
   let y = 10;
   let z = 10;
   let x = 10;
-  let mesh = new three.InstancedMesh(new three.BoxGeometry(size, size, size), new three.MeshNormalMaterial(), coords.length)
+  let mesh = new three.InstancedMesh(new three.BoxGeometry(size, size, size), new three.MeshNormalMaterial(), coords.length) // new three.MeshBasicMaterial({"color":color})
   let calcObject = new three.Object3D;
   for (let i = 0; i < mesh.count; i++) {
     x += coords[i][0];
@@ -42,7 +62,6 @@ function addItem(coords, size) {
 }
 
 renderer.setAnimationLoop(() => {
-  // e1.model.rotation.x += 0.01;
   controls.update();
   renderer.render(scene, camera)
 })
