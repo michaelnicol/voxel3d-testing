@@ -17,45 +17,78 @@ container.appendChild(renderer.domElement)
 // controls.autoRotateSpeed = 5.0
 scene.add(new three.AxesHelper(100, 100, 100))
 
+var GUI = new dat.GUI();
+
+
 let controller = new voxel3d.UUIDController();
+
+let L1Coords = {
+   x: 0,
+   y: 0,
+   z: 0
+}
 
 let layer1 = new voxel3d.Layer({
    "controller": controller,
-   "origin": [0,0,0],
-   "verticesArray": [[0,0,0],[9,0,0],[6,9,0]]
+   "origin": [0, 0, 0],
+   "verticesArray": [[0, 0, 0], [10, 0, 0], [10, 10, 0], [0, 10, 0]]
 })
-layer1.generateEdges().fillPolygon();
-
-console.log("LAYER 1 DIRECTORY")
-
-console.log(JSON.stringify(layer1.sortedFillVoxelsDirectory))
-
-console.log(layer1)
-let layer2 = new voxel3d.Layer({
+let line1 = new voxel3d.Line({
    "controller": controller,
-   "origin": [0,0,0],
-   "verticesArray": [[0,0,15],[9,0,15],[6,9,15]]
+   "origin": [0, 0, 0],
+   "endPoints": [[5, 5, 10], [5, 5, -10]]
 })
-layer2.generateEdges().fillPolygon();
-
-console.log("LAYER 2 DIRECTORY")
-
-console.log(JSON.stringify(layer2.sortedFillVoxelsDirectory))
-
-// console.log(layer1.getFillVoxels().sort((a,b)=>a[2]-b[2]).sort((a,b)=>a[1]-b[1]).sort((a,b)=>a[0]-b[0]))
-// console.log(layer2.getFillVoxels().sort((a,b)=>a[2]-b[2]).sort((a,b)=>a[1]-b[1]).sort((a,b)=>a[0]-b[0]))
-
-let composite = new voxel3d.LayerConvexExtrude({
+line1.generateLine();
+layer1.generateEdges();
+let composite = new voxel3d.CompositeVoxelCollection({
    "controller": controller,
-   "origin": [0,0,0],
-   "extrudeObjects": [layer1, layer2]
-});
+   "origin": [0, 0, 0],
+   "variableNames": {
+      [layer1.uuid]: layer1,
+      [line1.uuid]: line1
+   }
+})
+composite.setEquation(line1.uuid + composite.tokens.SUBTRACTION_OP + layer1.uuid);
 
-composite.generateEdges(true);
-addItem(composite.getFillVoxels(), 1.0, "RED")
-console.log(JSON.stringify(voxel3d.BaseObject.sortPoints(composite.getFillVoxels())))
-// addItem(layer1.getFillVoxels(), 1.0, "BLUE")
-// addItem(layer2.getFillVoxels(), 1.0, "RED")
+let unionComposite = new voxel3d.VoxelCollection({
+   "controller": controller,
+   "origin": [0, 0, 0],
+   "fillVoxels": []
+})
+
+
+const LineFolder = GUI.addFolder("Line");
+
+LineFolder.add(L1Coords, "x", -20, 100, 1).listen().onChange(() => {
+   subtractUnion();
+})
+
+LineFolder.add(L1Coords, "y", -20, 100, 1).listen().onChange(() => {
+   subtractUnion();
+})
+LineFolder.add(L1Coords, "z", -20, 100, 1).listen().onChange(() => {
+   subtractUnion();
+})
+
+function subtractUnion() {
+   let objects = [];
+   scene.traverse((obj) => {
+      if (obj.reID === "remove") {
+         objects.push(obj)
+      }
+   })
+   for (let i = 0; i < objects.length; i++) {
+      scene.remove(objects[i])
+   }
+   line1.setOrigin([L1Coords.x, L1Coords.y, L1Coords.z]);
+   unionComposite.setFillVoxels(layer1.getFillVoxels());
+   unionComposite.addFillVoxels(composite.interpretAST().getFillVoxels());
+   addItem(unionComposite.getFillVoxels(), 1.0, "RED");
+   console.log(unionComposite)
+   addItem(line1, 0.8, "BLUE");
+   addItem(layer1, 0.8, "GREEN");
+}
+subtractUnion();
 function addItem (coords, size, color = 'RED') {
    if (coords.length === 0) {
       return;

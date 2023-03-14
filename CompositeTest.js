@@ -25,37 +25,22 @@ let layer1 = new voxel3d.Layer({
    "verticesArray": [[0,0,0],[9,0,0],[6,9,0]]
 })
 layer1.generateEdges().fillPolygon();
-
-console.log("LAYER 1 DIRECTORY")
-
-console.log(JSON.stringify(layer1.sortedFillVoxelsDirectory))
-
-console.log(layer1)
 let layer2 = new voxel3d.Layer({
    "controller": controller,
    "origin": [0,0,0],
    "verticesArray": [[0,0,15],[9,0,15],[6,9,15]]
 })
 layer2.generateEdges().fillPolygon();
-
-console.log("LAYER 2 DIRECTORY")
-
-console.log(JSON.stringify(layer2.sortedFillVoxelsDirectory))
-
-// console.log(layer1.getFillVoxels().sort((a,b)=>a[2]-b[2]).sort((a,b)=>a[1]-b[1]).sort((a,b)=>a[0]-b[0]))
-// console.log(layer2.getFillVoxels().sort((a,b)=>a[2]-b[2]).sort((a,b)=>a[1]-b[1]).sort((a,b)=>a[0]-b[0]))
-
 let composite = new voxel3d.LayerConvexExtrude({
    "controller": controller,
    "origin": [0,0,0],
    "extrudeObjects": [layer1, layer2]
 });
 
-composite.generateEdges(true);
+composite.generateEdges();
 addItem(composite.getFillVoxels(), 1.0, "RED")
-console.log(JSON.stringify(voxel3d.BaseObject.sortPoints(composite.getFillVoxels())))
-// addItem(layer1.getFillVoxels(), 1.0, "BLUE")
-// addItem(layer2.getFillVoxels(), 1.0, "RED")
+addItem(layer1.getFillVoxels(), 1.0, "RED")
+addItem(layer2.getFillVoxels(), 1.0, "RED")
 function addItem (coords, size, color = 'RED') {
    if (coords.length === 0) {
       return;
